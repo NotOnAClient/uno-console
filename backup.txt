@@ -1,0 +1,15 @@
+while True:
+        msg_len = clientsocket.recv(header).decode(FORMAT)
+        if msg_len:
+            msg_len = int(msg_len)
+            username = clientsocket.recv(msg_len).decode(FORMAT)
+            data = clientsocket.recv(2048)
+            d = pickle.loads(data)
+            players.update({username:d})
+            player_list.append(username)
+            print(player_list)
+            print(players)
+        if len(player_list) == 2:
+            broadcast('Game has started')
+            card = pickle.dumps(cencard)
+            clientsocket.send(card)
