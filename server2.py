@@ -25,50 +25,38 @@ def send(msg):
     clientsocket.send(send_len)
     clientsocket.send(message)
 
-def recv_str():
-    msg_len = clientsocket.recv(header).decode(FORMAT)
-    if msg_len:
-        msg_len = int(msg_len)
-        msg = clientsocket.recv(msg_len).decode(FORMAT)
-        return msg
-
-def recv_tuple():
-    data = clientsocket.recv(2048)
-    d = pickle.loads(data)
-    return d
 
 def send_tuple(data):
     d = pickle.dumps(data)
     clientsocket.send(d)
 
 def receive():
-    msg_len = clientsocket.recv(header).decode(FORMAT)
-    try:
-        if msg_len:
-            msg_len = int(msg_len)
-            msg = clientsocket.recv(msg_len).decode(FORMAT)
-            return msg
-    except:
-        data = clientsocket.recv(2048)
-        d = pickle.loads(data)
+    message = clientsocket.recv(header).decode(FORMAT)
+    print(message)
+    print(type(message))
+    if isinstance(message, str):
+        message = int(message)
+        msg = clientsocket.recv(message).decode(FORMAT)
+        print(msg)
+        return msg
+    elif message.istuple():
+        d = pickle.loads(message)
         return d
 
 def recv_info():
-    username = recv_str()
-    d = recv_tuple()
-    # client_list.append(clientsocket)
+    username = receive()
+    d = receive()
     players.update({username: d})
-    # print(client_list)
     print(players)
 
 def game():
     while game_start:
-        send_tuple(cencard)
+        send('game_started')
 
 
 def handle_client(clientsocket, address):
     global game_start
-    while game_start == False:
+    while True:
         try:
             message = receive()
             print(message)
@@ -98,6 +86,5 @@ def start():
             break
         
 start() #reminder: stop handle thread, create specator def and thread
-while True:
-    game()
+
 

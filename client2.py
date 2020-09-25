@@ -22,6 +22,7 @@ def send(msg):
         msg_len = len(message)
         send_len = str(msg_len).encode(FORMAT)
         send_len += b' '*(header - len(send_len))
+        print(send_len)
         client.send(send_len)
         client.send(message)
     if isinstance(msg, tuple):
