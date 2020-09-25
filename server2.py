@@ -8,13 +8,14 @@ players = {}
 player_list = []
 client_list = []
 cencard = uno.starting_card()
-FORMAT = 'ascii'
+game_start = False
+FORMAT = 'utf-8'
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind(('127.0.0.1', 6255))
 
-def broadcast(msg):
-    for i in client_list:
-        i.send(msg)
+def broadcast(msg, clients):
+    for i in clients:
+        send(msg)
 
 def send(msg):
     message = msg.encode(FORMAT)
@@ -40,20 +41,43 @@ def send_tuple(data):
     d = pickle.dumps(data)
     clientsocket.send(d)
 
+def receive():
+    msg_len = clientsocket.recv(header).decode(FORMAT)
+    try:
+        if msg_len:
+            msg_len = int(msg_len)
+            msg = clientsocket.recv(msg_len).decode(FORMAT)
+            return msg
+    except:
+        data = clientsocket.recv(2048)
+        d = pickle.loads(data)
+        return d
+
+def recv_info():
+    username = recv_str()
+    d = recv_tuple()
+    # client_list.append(clientsocket)
+    players.update({username: d})
+    # print(client_list)
+    print(players)
+
+def game():
+    while game_start:
+        send_tuple(cencard)
+
+
 def handle_client(clientsocket, address):
-    while True:
+    global game_start
+    while game_start == False:
         try:
-            username = recv_str()
-            d = recv_tuple()
-            #client_list.append(clientsocket)
-            players.update({username:d})
-            #print(client_list)
-            print(players)
+            message = receive()
+            print(message)
         except ConnectionResetError:
             print(f'{username} left the server')
             client_list.remove(clientsocket)
             del players[username]
             print(players)
+            print(f'Active connections: {threading.activeCount() - 1}')
             break
     clientsocket.close()
 
@@ -64,9 +88,16 @@ def start():
         clientsocket, address = server.accept()
         print(f'Connection established wtih {address}')
         client_list.append(clientsocket)
+        recv_info()
         thread = threading.Thread(target=handle_client, args=(clientsocket, address))
         thread.start()
         print(f'Active connections: {threading.activeCount() - 1}')
+        if len(players) == 2:
+            send('Game started')
+            game_start = True
+            break
         
-start()
-    
+start() #reminder: stop handle thread, create specator def and thread
+while True:
+    game()
+
