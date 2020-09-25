@@ -13,3 +13,16 @@ while True:
             broadcast('Game has started')
             card = pickle.dumps(cencard)
             clientsocket.send(card)
+def send
+if isinstance(msg, str):
+        message = msg.encode(FORMAT)
+        msg_len = len(message)
+        send_len = str(msg_len).encode(FORMAT)
+        send_len += b' '*(header - len(send_len))
+        print(send_len)
+        print(message)
+        client.send(send_len)
+        client.send(message)
+    if isinstance(msg, tuple):
+        data = pickle.dumps(msg)
+        d = client.send(msg)

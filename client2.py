@@ -17,17 +17,23 @@ player = uno.Player(username)
 player.draw_cards(7)
 
 def send(msg):
-    if isinstance(msg, str):
+    try:
         message = msg.encode(FORMAT)
         msg_len = len(message)
         send_len = str(msg_len).encode(FORMAT)
         send_len += b' '*(header - len(send_len))
         print(send_len)
+        print(message)
         client.send(send_len)
         client.send(message)
-    if isinstance(msg, tuple):
-        data = pickle.dumps(msg)
-        d = client.send(msg)
+    except:
+        msg_len = len(msg)
+        send_len = str(msg_len).encode(FORMAT)
+        send_len += b' '*(header - len(send_len))
+        print(send_len)
+        print(msg)
+        client.send(send_len)
+        client.send(msg)
 
 def receive():
     msg_len = client.recv(header).decode(FORMAT)
@@ -42,13 +48,13 @@ def send_info():
     print(cards)
     send(username)
     d = pickle.dumps(cards)
-    client.send(d)
+    send(d)
 
 
 send_info()
-while True:
-    game = receive()
-    print(game)
+#while True:
+    #game = receive()
+    #print(game)
     #cencard = recv_tuple()
     #print(f'Centre card: {" ".join(cencard)}')
     #player.show_cards()

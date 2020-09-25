@@ -31,35 +31,41 @@ def send_tuple(data):
     clientsocket.send(d)
 
 def receive():
-    message = clientsocket.recv(header).decode(FORMAT)
+    message = clientsocket.recv(header)
     print(message)
-    print(type(message))
-    if isinstance(message, str):
+    try:
+        #make buffer stream for pickle
+        message = int(message)
+        data = clientsocket.recv(message)
+        d = pickle.loads(data)
+        print(f'{d} data')
+        return d
+    except:
+        #message = message.decode(FORMAT)
         message = int(message)
         msg = clientsocket.recv(message).decode(FORMAT)
-        print(msg)
+        print(f'{msg} message')
         return msg
-    elif message.istuple():
-        d = pickle.loads(message)
-        return d
 
 def recv_info():
     username = receive()
     d = receive()
     players.update({username: d})
     print(players)
+    return username
 
 def game():
     while game_start:
         send('game_started')
 
 
-def handle_client(clientsocket, address):
+def handle_client(clientsocket, address, username):
     global game_start
     while True:
         try:
             message = receive()
             print(message)
+            continue
         except ConnectionResetError:
             print(f'{username} left the server')
             client_list.remove(clientsocket)
@@ -76,8 +82,8 @@ def start():
         clientsocket, address = server.accept()
         print(f'Connection established wtih {address}')
         client_list.append(clientsocket)
-        recv_info()
-        thread = threading.Thread(target=handle_client, args=(clientsocket, address))
+        username = recv_info() #calling this username because i just wanted to get the username
+        thread = threading.Thread(target=handle_client, args=(clientsocket, address, username))
         thread.start()
         print(f'Active connections: {threading.activeCount() - 1}')
         if len(players) == 2:
