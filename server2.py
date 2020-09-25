@@ -13,9 +13,9 @@ FORMAT = 'utf-8'
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind(('127.0.0.1', 6255))
 
-def broadcast(msg, clients):
-    for i in clients:
-        send(msg)
+def broadcast(msg):
+    for i in client_list:
+        i.send(msg.encode())
 
 def send(msg):
     message = msg.encode(FORMAT)
@@ -93,7 +93,7 @@ def start():
         thread.start()
         print(f'Active connections: {threading.activeCount() - 1}')
         if len(players) == 2:
-            send('Game started')
+            broadcast('Game started')
             game_start = True
             break
         
