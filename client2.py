@@ -32,6 +32,7 @@ def send(msg):
 def recv_str():
     full_msg = ''
     new_msg = True
+    client.send('ready'.encode(FORMAT))
     while True:
         message = client.recv(header)
         if new_msg:
@@ -50,6 +51,7 @@ def recv_str():
 def recv_data():
     full_msg = b''
     new_msg = True
+    client.send('ready'.encode(FORMAT))
     while True:
         message = client.recv(header)
         if new_msg:
