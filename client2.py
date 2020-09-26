@@ -17,38 +17,62 @@ player = uno.Player(username)
 player.draw_cards(7)
 
 def send(msg):
-    try:
-        message = msg.encode(FORMAT)
-        msg_len = len(message)
-        send_len = str(msg_len).encode(FORMAT)
-        send_len += b' '*(header - len(send_len))
-        print(send_len)
-        print(message)
-        client.send(send_len)
-        client.send(message)
-    except:
-        msg_len = len(msg)
-        send_len = str(msg_len).encode(FORMAT)
-        send_len += b' '*(header - len(send_len))
-        print(send_len)
-        print(msg)
-        client.send(send_len)
-        client.send(msg)
+    a = client.recv(2048).decode(FORMAT)
+    if a == 'ready':
+        if type(msg) == str: #string
+            msg = f"{len(msg):<{header}}" + msg
+            print(f'{msg} string')
+            client.send(msg.encode(FORMAT))
+        else: #pickle
+            data = pickle.dumps(msg)
+            data = f"{len(data):<{header}}".encode(FORMAT) + data
+            client.send(data)
+            print(f'{data} data')
 
-def receive():
-    msg_len = client.recv(header).decode(FORMAT)
-    if msg_len:
-        msg_len = int(msg_len)
-        msg = client.recv(msg_len).decode(FORMAT)
-        return msg
+def recv_str():
+    full_msg = ''
+    new_msg = True
+    while True:
+        message = client.recv(header)
+        if new_msg:
+            print(f'message len: {message[:header]}')
+            msglen = int(message[:header])
+            new_msg = False
+        print(msglen)
+        full_msg += message.decode(FORMAT)
+        if len(full_msg) - header == msglen:
+            print('full msg recvd')
+            print(full_msg[header:])
+            new_msg = True
+            full_msg = ''
+            return full_msg
+
+def recv_data():
+    full_msg = b''
+    new_msg = True
+    while True:
+        message = client.recv(header)
+        if new_msg:
+            print(f'message len: {message[:header]}')
+            msglen = int(message[:header])
+            new_msg = False
+        print(msglen)
+        full_msg += message
+        if len(full_msg) - header == msglen:
+            print('full msg recvd')
+            print(full_msg[header:])
+            data = pickle.loads(full_msg[header:])
+            print(data)
+            new_msg = True
+            full_msg = b''
+            return data     
 
 def send_info():
     for k,v in player.cards.items():
         cards.append(v)
     print(cards)
     send(username)
-    d = pickle.dumps(cards)
-    send(d)
+    send(cards)
 
 
 send_info()

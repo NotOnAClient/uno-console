@@ -18,38 +18,60 @@ def broadcast(msg):
         i.send(msg.encode())
 
 def send(msg):
-    message = msg.encode(FORMAT)
-    msg_len = len(message)
-    send_len = str(msg_len).encode(FORMAT)
-    send_len += b' '*(header - len(send_len))
-    clientsocket.send(send_len)
-    clientsocket.send(message)
+    if type(msg) == str: #string
+        msg = f"{len(msg):<{header}}" + msg
+        print(f'{msg} string')
+        clientsocket.send(msg.encode(FORMAT))
+    else: #pickle
+        data = pickle.dumps(msg)
+        data = f"{len(data):<{header}}".encode(FORMAT) + data
+        clientsocket.send(data)
+        print(f'{data} data')
 
 
-def send_tuple(data):
-    d = pickle.dumps(data)
-    clientsocket.send(d)
+def recv_str():
+    full_msg = ''
+    new_msg = True
+    clientsocket.send('ready'.encode(FORMAT))
+    while True:
+        message = clientsocket.recv(header)
+        if new_msg:
+            print(f'message len: {message[:header]}')
+            msglen = int(message[:header])
+            new_msg = False
+        print(msglen)
+        full_msg += message.decode(FORMAT)
+        if len(full_msg) - header == msglen:
+            print('full msg recvd')
+            print(full_msg[header:])
+            new_msg = True
+            #full_msg = ''
+            return full_msg[header:]
 
-def receive():
-    message = clientsocket.recv(header)
-    print(message)
-    try:
-        #make buffer stream for pickle
-        message = int(message)
-        data = clientsocket.recv(message)
-        d = pickle.loads(data)
-        print(f'{d} data')
-        return d
-    except:
-        #message = message.decode(FORMAT)
-        message = int(message)
-        msg = clientsocket.recv(message).decode(FORMAT)
-        print(f'{msg} message')
-        return msg
+def recv_data():
+    full_msg = b''
+    new_msg = True
+    clientsocket.send('ready'.encode(FORMAT))
+    while True:
+        message = clientsocket.recv(header)
+        if new_msg:
+            print(f'message len: {message[:header]}')
+            msglen = int(message[:header])
+            new_msg = False
+        print(msglen)
+        full_msg += message
+        if len(full_msg) - header == msglen:
+            print('full msg recvd')
+            print(full_msg[header:])
+            data = pickle.loads(full_msg[header:])
+            print(data)
+            new_msg = True
+            full_msg = b''
+            return data
 
 def recv_info():
-    username = receive()
-    d = receive()
+    username = recv_str()
+    d = recv_data()
     players.update({username: d})
     print(players)
     return username
@@ -63,7 +85,7 @@ def handle_client(clientsocket, address, username):
     global game_start
     while True:
         try:
-            message = receive()
+            message = recv_str()
             print(message)
             continue
         except ConnectionResetError:
