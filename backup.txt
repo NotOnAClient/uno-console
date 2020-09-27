@@ -26,3 +26,11 @@ if isinstance(msg, str):
     if isinstance(msg, tuple):
         data = pickle.dumps(msg)
         d = client.send(msg)
+
+
+months = [“January” , “February”, “March”, “April”, “May”, “June”, “July”, “August”, “September”, “October”, “November”, “December”]
+nums = [x for x in range (1, 13)]
+mapping = dict(zip(nums, months))
+
+print(mapping[2])
+>>> Output: “February”

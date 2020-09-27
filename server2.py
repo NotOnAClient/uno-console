@@ -14,77 +14,48 @@ server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind(('127.0.0.1', 6255))
 
 def broadcast(msg):
+    if type(msg) == str: #string
+        msg = msg.encode(FORMAT)
+        msg_header = f"{len(msg):<{header}}".encode(FORMAT)
+        for i in client_list:
+            i.send(msg_header + msg)
+    else: #pickle
+        data = pickle.dumps(msg)
+        data_header = f"{len(data):<{header}}".encode(FORMAT)
+        for i in client_list:
+            i.send(data_header + data)
+
+def send(msg):
     clientsocket.send('ready'.encode())
     a = clientsocket.recv(2048).decode(FORMAT)
     if a == 'ready':
         if type(msg) == str: #string
             msg = f"{len(msg):<{header}}" + msg
             print(f'{msg} string')
-            for i in client_list:
-                i.send(msg.encode(FORMAT))
+            clientsocket.send(msg.encode(FORMAT))
         else: #pickle
             data = pickle.dumps(msg)
             data = f"{len(data):<{header}}".encode(FORMAT) + data
+            clientsocket.send(data)
             print(f'{data} data')
-            for i in client_list:
-                clientsocket.send(data)
-
-def send(msg):
-    if type(msg) == str: #string
-        msg = f"{len(msg):<{header}}" + msg
-        print(f'{msg} string')
-        clientsocket.send(msg.encode(FORMAT))
-    else: #pickle
-        data = pickle.dumps(msg)
-        data = f"{len(data):<{header}}".encode(FORMAT) + data
-        clientsocket.send(data)
-        print(f'{data} data')
 
 
 def recv_str():
-    full_msg = ''
-    new_msg = True
-    clientsocket.send('ready'.encode(FORMAT))
-    a = clientsocket.recv(2048).decode(FORMAT)
-    while a == 'ready':
-        message = clientsocket.recv(header)
-        if new_msg:
-            print(f'message len: {message[:header]}')
-            msglen = int(message[:header])
-            new_msg = False
-        print(msglen)
-        full_msg += message.decode(FORMAT)
-        print(full_msg)
-        if len(full_msg) - header == msglen:
-            print('full msg recvd')
-            print(full_msg[header:])
-            new_msg = True
-            #full_msg = ''
-            return full_msg[header:]
+    #a = clientsocket.recv(2048).decode(FORMAT)
+    #clientsocket.send('ready'.encode(FORMAT))
+    while True:
+        msg_header = clientsocket.recv(header)
+        msg_len = int(msg_header.decode(FORMAT))
+        msg = clientsocket.recv(msg_len).decode(FORMAT)
+        return msg
 
 def recv_data():
-    full_msg = b''
-    new_msg = True
-    clientsocket.send('ready'.encode(FORMAT))
-    a = clientsocket.recv(2048).decode(FORMAT)
-    print(a)
-    while a == 'ready':
-        message = clientsocket.recv(header)
-        if new_msg:
-            print(f'message len: {message[:header]}')
-            msglen = int(message[:header])
-            new_msg = False
-        print(msglen)
-        full_msg += message
-        print(full_msg)
-        if len(full_msg) - header == msglen:
-            print('full msg recvd')
-            print(full_msg[header:])
-            data = pickle.loads(full_msg[header:])
-            print(data)
-            new_msg = True
-            full_msg = b''
-            return data
+    while True:
+        data_header = clientsocket.recv(header)
+        data_len = int(data_header.decode(FORMAT))
+        data = clientsocket.recv(data_len)
+        d = pickle.loads(data)
+        return d
 
 def recv_info():
     username = recv_str()
@@ -129,6 +100,7 @@ def start():
             
         
 def game():
+    broadcast('cencard')
     broadcast(cencard)
     broadcast('show cards')
 
