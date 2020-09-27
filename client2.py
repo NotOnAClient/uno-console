@@ -18,6 +18,7 @@ player.draw_cards(7)
 
 def send(msg):
     a = client.recv(2048).decode(FORMAT)
+    client.send('ready'.encode())
     if a == 'ready':
         if type(msg) == str: #string
             msg = f"{len(msg):<{header}}" + msg
@@ -32,7 +33,9 @@ def send(msg):
 def recv_str():
     full_msg = ''
     new_msg = True
-    while True:
+    a = client.recv(2048).decode(FORMAT)
+    client.send('ready'.encode(FORMAT))
+    while a == 'ready':
         message = client.recv(header)
         if new_msg:
             print(f'message len: {message[:header]}')
@@ -76,10 +79,12 @@ def send_info():
 
 
 send_info()
-#while True:
-    #game = receive()
-    #print(game)
-    #cencard = recv_tuple()
-    #print(f'Centre card: {" ".join(cencard)}')
-    #player.show_cards()
-    #player.play_card(input('Play a card: '))
+game = recv_str()
+while game == 'Game started':
+    msg = recv_str()
+    if msg == 'show cards':
+        player.show_cards()
+    if msg == 'cencard':
+        cencard = recv_data()
+        print(f'Centre card: {"".join(cencard)}')
+    

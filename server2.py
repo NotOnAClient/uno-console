@@ -14,8 +14,20 @@ server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind(('127.0.0.1', 6255))
 
 def broadcast(msg):
-    for i in client_list:
-        i.send(msg.encode())
+    clientsocket.send('ready'.encode())
+    a = clientsocket.recv(2048).decode(FORMAT)
+    if a == 'ready':
+        if type(msg) == str: #string
+            msg = f"{len(msg):<{header}}" + msg
+            print(f'{msg} string')
+            for i in client_list:
+                i.send(msg.encode(FORMAT))
+        else: #pickle
+            data = pickle.dumps(msg)
+            data = f"{len(data):<{header}}".encode(FORMAT) + data
+            print(f'{data} data')
+            for i in client_list:
+                clientsocket.send(data)
 
 def send(msg):
     if type(msg) == str: #string
@@ -33,7 +45,8 @@ def recv_str():
     full_msg = ''
     new_msg = True
     clientsocket.send('ready'.encode(FORMAT))
-    while True:
+    a = clientsocket.recv(2048).decode(FORMAT)
+    while a == 'ready':
         message = clientsocket.recv(header)
         if new_msg:
             print(f'message len: {message[:header]}')
@@ -41,6 +54,7 @@ def recv_str():
             new_msg = False
         print(msglen)
         full_msg += message.decode(FORMAT)
+        print(full_msg)
         if len(full_msg) - header == msglen:
             print('full msg recvd')
             print(full_msg[header:])
@@ -52,7 +66,9 @@ def recv_data():
     full_msg = b''
     new_msg = True
     clientsocket.send('ready'.encode(FORMAT))
-    while True:
+    a = clientsocket.recv(2048).decode(FORMAT)
+    print(a)
+    while a == 'ready':
         message = clientsocket.recv(header)
         if new_msg:
             print(f'message len: {message[:header]}')
@@ -60,6 +76,7 @@ def recv_data():
             new_msg = False
         print(msglen)
         full_msg += message
+        print(full_msg)
         if len(full_msg) - header == msglen:
             print('full msg recvd')
             print(full_msg[header:])
@@ -75,10 +92,6 @@ def recv_info():
     players.update({username: d})
     print(players)
     return username
-
-def game():
-    while game_start:
-        send('game_started')
 
 
 def handle_client(clientsocket, address, username):
@@ -105,14 +118,20 @@ def start():
         print(f'Connection established wtih {address}')
         client_list.append(clientsocket)
         username = recv_info() #calling this username because i just wanted to get the username
-        thread = threading.Thread(target=handle_client, args=(clientsocket, address, username))
-        thread.start()
-        print(f'Active connections: {threading.activeCount() - 1}')
-        if len(players) == 2:
+        #thread = threading.Thread(target=handle_client, args=(clientsocket, address, username))
+        #thread.start()
+        #print(f'Active connections: {threading.activeCount() - 1}')
+        while len(players) == 2:
+            global game_start
             broadcast('Game started')
             game_start = True
-            break
+            game()
+            
         
-start() #reminder: stop handle thread, create specator def and thread
+def game():
+    broadcast(cencard)
+    broadcast('show cards')
+
+start()
 
 
