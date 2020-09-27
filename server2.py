@@ -18,17 +18,15 @@ def broadcast(msg):
         i.send(msg.encode())
 
 def send(msg):
-    a = clientsocket.recv(2048).decode(FORMAT)
-    if a == 'ready':
-        if type(msg) == str: #string
-            msg = f"{len(msg):<{header}}" + msg
-            print(f'{msg} string')
-            clientsocket.send(msg.encode(FORMAT))
-        else: #pickle
-            data = pickle.dumps(msg)
-            data = f"{len(data):<{header}}".encode(FORMAT) + data
-            clientsocket.send(data)
-            print(f'{data} data')
+    if type(msg) == str: #string
+        msg = f"{len(msg):<{header}}" + msg
+        print(f'{msg} string')
+        clientsocket.send(msg.encode(FORMAT))
+    else: #pickle
+        data = pickle.dumps(msg)
+        data = f"{len(data):<{header}}".encode(FORMAT) + data
+        clientsocket.send(data)
+        print(f'{data} data')
 
 
 def recv_str():
