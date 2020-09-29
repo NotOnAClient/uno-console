@@ -37,9 +37,10 @@ class Player:
                 print('You drew a card')
                 return 'draw'
             elif card.isnumeric():
-                card = Game(self).check_card(card)
+                #card = Game(self).check_card(card)
                 #print(card)
-                return card
+                output = self.num_to_card(card)
+                return output
                 
             else:
                 print('Please input a number')
@@ -49,7 +50,6 @@ class Player:
             
 
     def show_cards(self):
-        print('Centre card: ' + ' '.join(cencard))
         print('=======================================')
         print('Your cards' + '(' + str(len(self.cards)) + ')' + ':') #shows player cards
         for index, i in self.cards.items():
@@ -68,11 +68,17 @@ class Player:
             count+=1
         self.cards = new_dict
 
-class Game(Player):
-    def __init__(self, player_class):
+    def num_to_card(self, num):
+        num = int(num)
+        card = self.cards[num]
+        print(card)
+        return card
+
+class Game():
+    #def __init__(self, player_class):
         #self.cencard = []
-        self.players = []
-        self.cards = player_class.cards
+        #self.players = []
+        #self.cards = player_class.cards
     
     def check_card(self, card):
         #card = str(card)
@@ -80,8 +86,7 @@ class Game(Player):
         #list_card = list(card.split())
         
         while True:
-            card = int(card)
-            if self.cards[card][0] == 'wild':
+            if card[0] == 'wild':
                 colours = {1:'red', 2:'blue', 3:'green', 4:'yellow'}
                 for k, v in colours.items():
                     print(str(k) + ': ' + v)
@@ -94,10 +99,10 @@ class Game(Player):
                     output = ('wild', colours[int(col)])
                     for i in reversed(cencard): cencard.remove(i)
                     cencard_new = [cencard.append(i) for i in output]
-                    del self.cards[card]
+                    #del self.cards[card]
                     return output
                     #break
-            elif self.cards[card][0] == 'wild4':
+            elif card[0] == 'wild4':
                 colours = {1:'red', 2:'blue', 3:'green', 4:'yellow'}
                 for k, v in colours.items():
                     print(str(k) + ': ' + v)
@@ -110,20 +115,20 @@ class Game(Player):
                     output = ('wild4', colours[int(col)])
                     for i in reversed(cencard): cencard.remove(i)
                     cencard_new = [cencard.append(i) for i in output]
-                    self.draw_cards(5) #no idea why i have to draw 5 cards
-                    del self.cards[card]
+                    #self.draw_cards(5) #no idea why i have to draw 5 cards
+                    #del self.cards[card]
                     return output
                     #break
-            elif self.cards[card][0] not in cencard and self.cards[card][1] != cencard[1]:
+            elif card[0] not in cencard and card[1] != cencard[1]:
                 print('Card cannot be used')
                 break
                 #break
             else:
-                output = self.cards[card]
+                output = card
                 print('You used ' + str(output))
                 for i in reversed(cencard): cencard.remove(i)
-                cencard_new = [cencard.append(i) for i in self.cards[card]]
-                del self.cards[card]
+                cencard_new = [cencard.append(i) for i in card]
+                #del self.cards[card]
                 return output
                 
         #except KeyError:

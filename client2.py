@@ -52,14 +52,27 @@ def send_info():
     send(username)
     send(cards)
 
+def recv_game_msg():
+    msg = recv_str()
+    while msg:
+        if msg == 'cencard':
+            global cencard
+            cencard = recv_data()
+            print(f'Centre card: {" ".join(cencard)}')
+            msg = ''
+        if msg == 'show cards':
+            player.show_cards()
+            msg = ''
+            break
+        if msg == 'play card':
+            card = player.play_card(input('Play a card: '))
+            #card = player.num_to_card(num)
+            print(card)
+            send(card)
+            #msg = ''
+            break
 
 send_info()
 game = recv_str()
 while game == 'Game started':
-    msg = recv_str()
-    if msg == 'show cards':
-        player.show_cards()
-    if msg == 'cencard':
-        cencard = recv_data()
-        print(f'Centre card: {"".join(cencard)}')
-    
+    recv_game_msg()
