@@ -24,27 +24,68 @@ class Player:
         self.cards = {}
         self.turn = False
 
-    def play_card(self, card):
+    def play_card(self):
         self.rearrange_cards(self.cards)
         self.turn = True
-        #while self.turn:
-        card = str(card)
-        #tuple_card = tuple(card.split())
-        list_card = list(card.split())
+        num = int()
         while True:
+            lst = []
+            card = input('Play a card: ')
+            num = card
+            print(num)
+            card = str(card)
+            list_card = list(card.split())
             if list_card[0] == 'draw':
                 #self.cards[len(self.cards)+1] = random_card()
                 print('You drew a card')
-                return 'draw'
+                lst.append(('draw', ''))
+                lst.append(None)
+                return lst
             elif card.isnumeric():
                 #card = Game(self).check_card(card)
                 #print(card)
-                output = self.num_to_card(card)
-                return output
+                card = self.num_to_card(card)
+                if card[0] == 'wild':
+                    colours = {1:'red', 2:'blue', 3:'green', 4:'yellow'}
+                    for k, v in colours.items():
+                        print(str(k) + ': ' + v)
+                    col = input('Select a colour: ')
+                    if col.isnumeric() == False:
+                        print('Please input a number')
+                        continue
+                    else:
+                        print('You selected ' + colours[int(col)])
+                        output = ('wild', colours[int(col)])
+                        for i in reversed(cencard): cencard.remove(i)
+                        cencard_new = [cencard.append(i) for i in output]
+                        lst.append(output)
+                        lst.append(num)
+                        return lst
+
+                elif card[0] == 'wild4':
+                    colours = {1:'red', 2:'blue', 3:'green', 4:'yellow'}
+                    for k, v in colours.items():
+                        print(str(k) + ': ' + v)
+                    col = input('Select a colour: ')
+                    if col.isnumeric() == False:
+                        print('Please input a number')
+                        continue
+                    else:
+                        print('You selected ' + colours[int(col)])
+                        output = ('wild4', colours[int(col)])
+                        for i in reversed(cencard): cencard.remove(i)
+                        cencard_new = [cencard.append(i) for i in output]
+                        lst.append(output)
+                        lst.append(num)
+                        return lst
+                else:
+                    lst.append(card)
+                    lst.append(num)
+                    return lst
                 
             else:
                 print('Please input a number')
-                #break
+                continue
             self.turn = False
             #self.rearrange_cards(self.cards)
             
@@ -57,8 +98,14 @@ class Player:
         print('=======================================')
         
     def draw_cards(self, number):
-        for i in range(1, number+1):
-            self.cards.update({len(self.cards)+1: random_card()})
+        self.rearrange_cards(self.cards)
+        card_list = []
+        for i in range(number):
+            card = random_card()
+            card_list.append(card)
+            self.cards.update({len(self.cards)+1: card})
+            print(f'draw_card: {card} added')
+        return card_list
 
     def rearrange_cards(self, cards):
         count = 1
@@ -86,43 +133,18 @@ class Game():
         #list_card = list(card.split())
         
         while True:
-            if card[0] == 'wild':
-                colours = {1:'red', 2:'blue', 3:'green', 4:'yellow'}
-                for k, v in colours.items():
-                    print(str(k) + ': ' + v)
-                col = input('Select a colour: ')
-                if col.isnumeric() == False:
-                    print('Please input a number')
-                    continue
-                else:
-                    print('You selected ' + colours[int(col)])
-                    output = ('wild', colours[int(col)])
-                    for i in reversed(cencard): cencard.remove(i)
-                    cencard_new = [cencard.append(i) for i in output]
-                    #del self.cards[card]
-                    return output
-                    #break
-            elif card[0] == 'wild4':
-                colours = {1:'red', 2:'blue', 3:'green', 4:'yellow'}
-                for k, v in colours.items():
-                    print(str(k) + ': ' + v)
-                col = input('Select a colour: ')
-                if col.isnumeric() == False:
-                    print('Please input a number')
-                    break
-                else:
-                    print('You selected ' + colours[int(col)])
-                    output = ('wild4', colours[int(col)])
-                    for i in reversed(cencard): cencard.remove(i)
-                    cencard_new = [cencard.append(i) for i in output]
-                    #self.draw_cards(5) #no idea why i have to draw 5 cards
-                    #del self.cards[card]
-                    return output
-                    #break
+            if card[0] == 'wild' or card[0] == 'wild4':
+                output = card
+                print('You used ' + str(output))
+                for i in reversed(cencard): cencard.remove(i)
+                cencard_new = [cencard.append(i) for i in card]
+                return output
+            
             elif card[0] not in cencard and card[1] != cencard[1]:
                 print('Card cannot be used')
                 break
-                #break
+            
+
             else:
                 output = card
                 print('You used ' + str(output))

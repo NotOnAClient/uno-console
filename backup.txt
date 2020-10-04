@@ -34,3 +34,13 @@ mapping = dict(zip(nums, months))
 
 print(mapping[2])
 >>> Output: “February”
+
+
+if 'wild' in card or 'wild4' in card:
+                wild = (card[0], '')
+                del player.cards[int(num)]
+                print(player.cards)
+            else:
+                #print(f'wild {wild}')
+                del player.cards[int(num)]
+                print(player.cards)
