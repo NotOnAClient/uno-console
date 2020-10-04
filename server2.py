@@ -143,7 +143,8 @@ class gameServer:
             if 'draw' in card:
                 self.send('draw 1', client=client)
                 cards = self.recv_data(client=client)
-                card_list = card_list + card
+                card_list = card_list + cards
+                condition = ''
                 continue
             else:
                 a = game.check_card(card)
