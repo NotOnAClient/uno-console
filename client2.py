@@ -22,7 +22,7 @@ def send(msg):
     if type(msg) == str: #string
         msg = msg.encode(FORMAT)
         msg_header = f"{len(msg):<{header}}".encode(FORMAT)
-        print(f'{msg} string')
+        print(f'send: {msg} string')
         client.send(msg_header + msg)
     else: #pickle
         data = pickle.dumps(msg)
@@ -95,6 +95,14 @@ def recv_game_msg():
             #send('drawn')
             msg = ''
             break
+        if msg == 'invalid card':
+            print('Card cannot be used')
+            msg = ''
+            break
+        if msg == 'keyerror':
+            print('Card not found')
+            msg = ''
+            break
         else:
             print(msg)
             msg = ''
@@ -106,3 +114,5 @@ while game == 'Game started':
     a = recv_game_msg()
     if a:
         send(a)
+    if len(player.cards) == 0:
+        send(('win', ''))

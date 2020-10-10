@@ -2,6 +2,7 @@ import socket
 import pickle
 import threading
 from itertools import cycle
+from itertools import islice
 import uno
 
 header = 50
@@ -9,6 +10,7 @@ players = {} #{player:cards}
 player_list = [] #store usernames
 client_list = [] #used to send/broadcast messages
 player_client_dict = {} # used for changing turns {player:client connection}
+turn_index = int()
 cencard = uno.starting_card()
 game = uno.Game()
 FORMAT = 'utf-8'
@@ -18,13 +20,14 @@ server.bind(('127.0.0.1', 6255))
 class gameServer:
     def __init__(self):
         self.game_start = False
+        self.turn_list = []
 
     def broadcast(self, msg):
         if type(msg) == str: #string
             msg = msg.encode(FORMAT)
             msg_header = f"{len(msg):<{header}}".encode(FORMAT)
             for i in client_list:
-                print(f'broadcast: {i}')
+                #print(f'broadcast: {i}')
                 i.send(msg_header + msg)
         else: #pickle
             data = pickle.dumps(msg)
@@ -69,15 +72,13 @@ class gameServer:
         username = self.recv_str()
         d = self.recv_data()
         players.update({username: d})
-        print(f'recv_info: {players}')
+        #print(f'recv_info: {players}')
         return username
 
 
     def handle_client(self, clientsocket, address, username):
         while True:
             try:
-                #while self.game_start:
-                    #self.game()
                 pass
             except ConnectionResetError:
                 print(f'{username} left the server')
@@ -99,53 +100,113 @@ class gameServer:
             username = self.recv_info() #calling this username because i just wanted to get the username
             player_list.append(username)
             player_client_dict = dict(zip(player_list, client_list))
-            thread = threading.Thread(target=self.handle_client, args=(self.clientsocket, self.address, username))
-            thread.start()
+            #thread = threading.Thread(target=self.handle_client, args=(self.clientsocket, self.address, username))
+            #thread.start()
             #print(f'Active connections: {threading.activeCount() - 1}')
-            while len(players) == 2:
+            while len(players) == 3:
+                self.turn_list = list(zip(player_list, client_list))
                 self.broadcast('Game started')
                 self.game_start = True
                 self.game()
    
     def change_turn(self):
-        print(player_client_dict.items())
-        for k,v in cycle(player_client_dict.items()):
-            print(f"It is {k}'s turn")
-            self.broadcast(f"It is {k}'s turn")
-            yield k, v
-            #return v
+        global turn_index
+        global player_client_dict
+        print(f'player_list: {player_list}')
+        print(f'reversed player_list: {list(reversed(player_list))}')
+        print(f'turn_list: {self.turn_list}')
+        turn = self.turn_list[0]
+        #reverse_count = 0
+        lst = []
+        restart = True
+        while restart:
+            if turn_index < 0: #if turn_index is negative, errors will appear
+                turn_index = len(self.turn_list) - 1
+            for k,v in islice(cycle(self.turn_list), int(turn_index), None):
+                print(f'turn_list: {self.turn_list}')
+                print(k)
+                turn = (k,v)
+                if self.condition == 'skip':
+                    self.condition = ''
+                    turn_index = self.turn_list.index(turn)
+                    continue
+                if self.condition == 'reverse':
+                    lst = self.turn_list[::-1]
+                    self.turn_list = lst
+                    #reverse_count += 1
+                    #turn = (k,v)
+                    turn_index = self.turn_list.index(turn) - 1
+                    print(f'turn_index: {turn_index}')
+                    print(f'self.turn_list reverse: {self.turn_list}')
+                    #restart = True
+                    lst = []
+                    self.condition = ''
+                    break
+                #restart = False
+                turn_index = self.turn_list.index(turn)
+                print(f'turn_index: {turn_index}')
+                print(f"It is {k}'s turn")
+                self.broadcast(f"It is {k}'s turn")
+                yield k, v
+                #return v
+    def reverse_change_turn(self, iter):
+        yield reversed(list(iter))
 
     def game(self):
+        self.game_start = True
         self.send('cencard')
         self.send(cencard)
         self.send('show cards')
         #self.broadcast('play card')
-        condition = ''
+        self.condition = ''
         t = self.change_turn()
+        self.next_turn = True
         while True:
-            user, client = next(t)
-            card_list = players[user]
-            self.send('cencard', client=client)
-            self.send(cencard, client=client)
-            if condition != '':
-                self.send(condition, client=client)
-                if 'draw' in condition:
-                    cards = self.recv_data(client=client)
+            if self.next_turn:
+                self.user, self.client = next(t)
+            card_list = players[self.user]
+            self.send('cencard', client=self.client)
+            self.send(cencard, client=self.client)
+            print(f'card_list: {self.user}, {card_list}')
+            if self.condition != '':
+                self.send(self.condition, client=self.client)
+                if 'draw' in self.condition: #if prev player uses wild+4
+                    cards = self.recv_data(client=self.client)
                     print(f'cards: {cards}')
-                    card_list = card_list + cards
+                    players[self.user].extend(cards)
                     print(f'card_list: {card_list}')
-            self.send('show cards', client=client)
-            self.send('play card', client=client)
+            self.send('show cards', client=self.client)
+            self.send('play card', client=self.client)
             try:
-                card = self.recv_data(client=client)
+                card = self.recv_data(client=self.client)
             except pickle.UnpicklingError:
-                card = self.recv_str(client=client)
-            if 'draw' in card:
-                self.send('draw 1', client=client)
-                cards = self.recv_data(client=client)
-                card_list = card_list + cards
-                condition = ''
+                card = self.recv_str(client=self.client) #idk why this is here. just to prevent errors ig
+                print(card)
+            #except ConnectionResetError:
+                #client_list.remove(client)
+                #del players[self.user]
+                #del player_client_dict[self.user]
+                #print(f'{self.user} left the server')
+                #print(players)
+                #next_turn = True
+                #print(f'Active connections: {threading.activeCount() - 1}')
+                #continue
+            if 'draw' in card: #check if player draws a card
+                self.send('draw 1', client=self.client)
+                cards = self.recv_data(client=self.client)
+                players[self.user].extend(cards) #must use .extend(), or for some reason it does not update
+                self.condition = ''
                 continue
+            elif 'keyerror' in card: #check if player chooses a card that doesn't exist
+                self.send('keyerror', client=self.client)
+                self.next_turn = False
+                self.condition = ''
+                continue
+            elif 'win' in card:
+                print(f'{self.user} won the game!')
+                self.broadcast(f'{self.user} won the game!')
+                self.next_turn = False
+                break
             else:
                 a = game.check_card(card)
                 print(f'a {a}')
@@ -156,18 +217,34 @@ class gameServer:
                 elif 'wild4' in a:
                     wild = (a[0], '')
                     print(f'wild4 {wild}')
-                    condition = 'draw 4'
+                    self.condition = 'draw 4'
                     card_list.remove(wild)
-                else:
+                elif 'skip' in a:
+                    self.condition = 'skip'
                     card_list.remove(a)
-                    condition = ''
-                print(f'card_list: {user}, {card_list}')
-                self.send('delete', client=client)
-                self.send(a, client=client)
+                elif 'reverse' in a:
+                    self.condition = 'reverse'
+                    card_list.remove(a)
+                    self.next_turn = True
+                elif a == 'invalid card':
+                    self.send('invalid card', client=self.client)
+                    self.next_turn = False
+                    self.condition = ''
+                    continue
+                else:
+                    #print(f'client_list: {client_list}')
+                    #print(f'else card_list: {self.user}, {card_list}')
+                    card_list.remove(a)
+                    self.condition = ''
+                    self.next_turn = True
+                self.send('delete', client=self.client)
+                self.send(a, client=self.client)
+                self.next_turn = True
         
 
 s = gameServer()
 s.start()
+
 
 
 

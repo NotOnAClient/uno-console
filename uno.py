@@ -78,6 +78,13 @@ class Player:
                         lst.append(output)
                         lst.append(num)
                         return lst
+                elif card == 'card not found':
+                    print('Card not found')
+                    output = 'keyerror'
+                    lst.append((output,''))
+                    lst.append(num)
+                    print(f'card not found: {lst}')
+                    return lst
                 else:
                     lst.append(card)
                     lst.append(num)
@@ -117,7 +124,10 @@ class Player:
 
     def num_to_card(self, num):
         num = int(num)
-        card = self.cards[num]
+        try:
+            card = self.cards[num]
+        except KeyError:
+            return 'card not found'
         print(card)
         return card
 
@@ -142,7 +152,7 @@ class Game():
             
             elif card[0] not in cencard and card[1] != cencard[1]:
                 print('Card cannot be used')
-                break
+                return 'invalid card'
             
 
             else:
