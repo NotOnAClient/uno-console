@@ -2,8 +2,19 @@ import socket
 import pickle
 import uno
 
-host = '127.0.0.1'
-port = 6255
+server_settings = []
+
+
+with open('client_settings.txt', 'r') as settings:
+    for i in settings.readlines():
+        i = i.rstrip('\n')
+        p = i.split('=')
+        print(p)
+        server_settings.append(p[1])
+
+host = server_settings[0]
+port = int(server_settings[1])
+
 FORMAT = 'utf-8'
 username = str(input('username: '))
 
@@ -22,14 +33,14 @@ def send(msg):
     if type(msg) == str: #string
         msg = msg.encode(FORMAT)
         msg_header = f"{len(msg):<{header}}".encode(FORMAT)
-        print(f'send: {msg} string')
+        #print(f'send: {msg} string')
         client.send(msg_header + msg)
     else: #pickle
         data = pickle.dumps(msg)
         data_header = f"{len(data):<{header}}".encode(FORMAT)
-        print('header sent data')
+        #print('header sent data')
         client.send(data_header + data)
-        print(f'{data} data')
+        #print(f'{data} data')
 
 def recv_str():
     while True:
@@ -44,14 +55,14 @@ def recv_data():
         data_len = int(data_header.decode(FORMAT))
         data = client.recv(data_len)
         d = pickle.loads(data)
-        print(d)
+        #print(d)
         return d
 
 def send_info():
     cards = []
     for k,v in player.cards.items():
         cards.append(v)
-    print(cards)
+    #print(cards)
     send(username)
     send(cards)
 
@@ -74,22 +85,22 @@ def recv_game_msg():
             global num
             card, num = player.play_card()
             #card = player.num_to_card(num)
-            print(card)
-            print(f'play num {num}')
+            #print(card)
+            #print(f'play num {num}')
             return card
             #msg = ''
         if msg == 'delete':
             card = recv_data()
             #print(f'wild {wild}')
             del player.cards[int(num)]
-            print(player.cards)
+            #print(player.cards)
             msg = ''
             break
         if 'draw' in msg:
             #msg = msg.strip()
-            print(f'draw {msg}')
+            #print(f'draw {msg}')
             cards = player.draw_cards(int(msg[-1]))
-            print(f'drawn_cards: {cards}')
+            #print(f'drawn_cards: {cards}')
             send(cards)
             #print(player.cards)
             #send('drawn')
@@ -103,8 +114,12 @@ def recv_game_msg():
             print('Card not found')
             msg = ''
             break
+        if msg == 'win':
+            print('You won the game!')
+            input('Press Enter to exit.')
+            break
         else:
-            print(msg)
+            print(msg) #print out what is going on in the game
             msg = ''
             break
 
@@ -114,5 +129,3 @@ while game == 'Game started':
     a = recv_game_msg()
     if a:
         send(a)
-    if len(player.cards) == 0:
-        send(('win', ''))

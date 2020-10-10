@@ -32,7 +32,7 @@ class Player:
             lst = []
             card = input('Play a card: ')
             num = card
-            print(num)
+            #print(num)
             card = str(card)
             list_card = list(card.split())
             if list_card[0] == 'draw':
@@ -83,7 +83,7 @@ class Player:
                     output = 'keyerror'
                     lst.append((output,''))
                     lst.append(num)
-                    print(f'card not found: {lst}')
+                    #print(f'card not found: {lst}')
                     return lst
                 else:
                     lst.append(card)
@@ -111,7 +111,7 @@ class Player:
             card = random_card()
             card_list.append(card)
             self.cards.update({len(self.cards)+1: card})
-            print(f'draw_card: {card} added')
+            #print(f'draw_card: {card} added')
         return card_list
 
     def rearrange_cards(self, cards):
@@ -128,7 +128,7 @@ class Player:
             card = self.cards[num]
         except KeyError:
             return 'card not found'
-        print(card)
+        #print(card)
         return card
 
 class Game():
