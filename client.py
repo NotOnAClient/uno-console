@@ -16,7 +16,7 @@ host = server_settings[0]
 port = int(server_settings[1])
 
 FORMAT = 'utf-8'
-username = str(input('username: '))
+username = str(input('Username: '))
 
 cencard = ()
 
@@ -70,24 +70,24 @@ def recv_game_msg():
     #global num
     msg = recv_str()
     #num = int()
-    while msg:
+    if msg:
         if msg == 'cencard':
             global cencard
             cencard = recv_data()
-            print(f'Centre card: {" ".join(cencard)}')
+            print(f'Centre card: {" ".join(cencard)}', end='')
             msg = ''
         if msg == 'show cards':
             player.rearrange_cards(player.cards)
             player.show_cards()
             msg = ''
-            break
+            #break
         if msg == 'play card':
-            global num
+            global num #this line is needed for 'delete'
             card, num = player.play_card()
             #card = player.num_to_card(num)
             #print(card)
             #print(f'play num {num}')
-            return card
+            send(card)
             #msg = ''
         if msg == 'delete':
             card = recv_data()
@@ -95,7 +95,7 @@ def recv_game_msg():
             del player.cards[int(num)]
             #print(player.cards)
             msg = ''
-            break
+            #break
         if 'draw' in msg:
             #msg = msg.strip()
             #print(f'draw {msg}')
@@ -105,27 +105,29 @@ def recv_game_msg():
             #print(player.cards)
             #send('drawn')
             msg = ''
-            break
+            #break
         if msg == 'invalid card':
             print('Card cannot be used')
             msg = ''
-            break
+            #break
         if msg == 'keyerror':
             print('Card not found')
             msg = ''
-            break
+            #break
         if msg == 'win':
             print('You won the game!')
             input('Press Enter to exit.')
-            break
+            #break
         else:
+            #print('---------------------------------------')
             print(msg) #print out what is going on in the game
+            #print('---------------------------------------')
             msg = ''
-            break
+            #break
 
 send_info()
 game = recv_str()
 while game == 'Game started':
-    a = recv_game_msg()
-    if a:
-        send(a)
+    recv_game_msg()
+    #if a:
+        #send(a)

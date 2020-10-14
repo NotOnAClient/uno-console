@@ -15,7 +15,7 @@ cencard = uno.starting_card()
 game = uno.Game()
 FORMAT = 'utf-8'
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.bind(('127.0.0.1', 6255))
+server.bind(('192.168.1.87', 6255))
 
 class gameServer:
     def __init__(self):
@@ -109,7 +109,7 @@ class gameServer:
             #thread = threading.Thread(target=self.handle_client, args=(self.clientsocket, self.address, username))
             #thread.start()
             #print(f'Active connections: {threading.activeCount() - 1}')
-            while len(players) == 3:
+            if len(players) == 2:
                 self.turn_list = list(zip(player_list, client_list))
                 self.broadcast('Game started')
                 self.broadcast('cencard')
@@ -191,12 +191,12 @@ class gameServer:
                 card = self.recv_str(client=self.client) #idk why this is here. just to prevent errors ig
                 print(card)
             except ConnectionResetError:
-                client_list.remove(client)
+                client_list.remove(self.client)
                 del players[self.user]
                 del player_client_dict[self.user]
                 print(f'{self.user} left the server')
                 print(players)
-                next_turn = True
+                self.next_turn = True
                 #print(f'Active connections: {threading.activeCount() - 1}')
                 continue
             if 'draw' in card: #check if player draws a card
@@ -211,11 +211,6 @@ class gameServer:
                 self.next_turn = False
                 self.condition = ''
                 continue
-            elif 'win' in card:
-                print(f'{self.user} won the game!')
-                self.broadcast(f'{self.user} won the game!')
-                self.next_turn = False
-                break
             else:
                 a = game.check_card(card)
                 #print(f'a {a}')
@@ -256,7 +251,7 @@ class gameServer:
                     print(f'{self.user} left the server')
                     self.broadcast(f'{self.user} left the server')
                     #print(players)
-                    next_turn = True
+                    self.next_turn = True
                     continue
                 self.send('delete', client=self.client)
                 self.send(a, client=self.client)

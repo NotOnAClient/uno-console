@@ -35,7 +35,10 @@ class Player:
             #print(num)
             card = str(card)
             list_card = list(card.split())
-            if list_card[0] == 'draw':
+            if card == '':
+                print('Please enter a card')
+                continue
+            elif list_card[0] == 'draw':
                 #self.cards[len(self.cards)+1] = random_card()
                 print('You drew a card')
                 lst.append(('draw', ''))
@@ -102,7 +105,7 @@ class Player:
         print('Your cards' + '(' + str(len(self.cards)) + ')' + ':') #shows player cards
         for index, i in self.cards.items():
             print(str(index) + ': ' + i[0], i[1])
-        print('=======================================')
+        print('=======================================', end='')
         
     def draw_cards(self, number):
         self.rearrange_cards(self.cards)
