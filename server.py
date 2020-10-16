@@ -1,9 +1,22 @@
 import socket
 import pickle
-import threading
+#import threading
 from itertools import cycle
 from itertools import islice
 import uno
+
+server_settings = []
+
+with open('server_settings.txt', 'r') as settings:
+    for i in settings.readlines():
+        i = i.rstrip('\n')
+        p = i.split('=')
+        print(p)
+        server_settings.append(p[1])
+
+host = server_settings[0]
+port = int(server_settings[1])
+max_players = int(server_settings[2])
 
 header = 50
 players = {} #{player:cards}
@@ -15,7 +28,7 @@ cencard = uno.starting_card()
 game = uno.Game()
 FORMAT = 'utf-8'
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.bind(('192.168.1.87', 6255))
+server.bind((host, port))
 
 class gameServer:
     def __init__(self):
@@ -109,7 +122,7 @@ class gameServer:
             #thread = threading.Thread(target=self.handle_client, args=(self.clientsocket, self.address, username))
             #thread.start()
             #print(f'Active connections: {threading.activeCount() - 1}')
-            if len(players) == 2:
+            if len(players) == max_players:
                 self.turn_list = list(zip(player_list, client_list))
                 self.broadcast('Game started')
                 self.broadcast('cencard')
@@ -160,6 +173,7 @@ class gameServer:
                 #return v
 
     def game(self):
+        global players
         self.game_start = True
         self.send('cencard')
         self.send(cencard)
@@ -224,6 +238,9 @@ class gameServer:
                     #print(f'wild4 {wild}')
                     self.condition = 'draw 4'
                     card_list.remove(wild)
+                elif '+2' in a:
+                    self.condition = 'draw 2'
+                    card_list.remove(a)
                 elif 'skip' in a:
                     self.condition = 'skip'
                     card_list.remove(a)
@@ -244,6 +261,8 @@ class gameServer:
                     self.next_turn = True
                 try:
                     self.broadcast(f'{self.user} used {" ".join(a)}')
+                    self.broadcast('cencard')
+                    self.broadcast(cencard)
                 except ConnectionResetError:
                     #client_list.remove(self.client)
                     #del players[self.user]
@@ -259,11 +278,13 @@ class gameServer:
                 if len(card_list) == 0:
                     self.send('win', client=self.client)
                     self.broadcast(f'{self.user} won the game!')
+                    self.broadcast('exit')
                     self.next_turn = False
                     break
                 else:
                     self.next_turn = True
-        #
+        players = {}
+        return
         
 
 s = gameServer()

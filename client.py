@@ -117,7 +117,11 @@ def recv_game_msg():
         if msg == 'win':
             print('You won the game!')
             input('Press Enter to exit.')
+            exit()
             #break
+        if msg == 'exit':
+            input('Press Enter to exit.')
+            exit()
         else:
             #print('---------------------------------------')
             print(msg) #print out what is going on in the game

@@ -1,12 +1,12 @@
 from random import choice
-colours = ['red', 'blue', 'green', 'yellow', 'wild', 'wild4']
-number = [0,1,2,3,4,5,6,7,8,9,'skip','reverse']
+colours = ['red', 'blue', 'green', 'yellow']
+number = [0,1,2,3,4,5,6,7,8,9,'skip','reverse','+2', 'wild', 'wild4']
 cencard = []
 def random_card():
-        num = choice(number)
         col = choice(colours)
-        if col == 'wild' or col == 'wild4':
-            t = (col, '')
+        num = choice(number)
+        if num == 'wild' or num == 'wild4':
+            t = (num, '')
         else:
             t = (col, str(num))
         return t
@@ -36,7 +36,7 @@ class Player:
             card = str(card)
             list_card = list(card.split())
             if card == '':
-                print('Please enter a card')
+                print('Please enter a card number')
                 continue
             elif list_card[0] == 'draw':
                 #self.cards[len(self.cards)+1] = random_card()
