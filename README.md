@@ -2,7 +2,7 @@
 Console/text based online multiplayer Uno game written with Python.
 
 # How to use
-Using this app is self explanatory. Enter the number of the card that you want to play.
+Using this app is self explanatory. Enter the number of the card that you want to play. Type "draw" to draw a card.
 
 # Build
 You can build the client using `Pyinstaller` using this command:
