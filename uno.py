@@ -2,6 +2,13 @@ from random import choice
 colours = ['red', 'blue', 'green', 'yellow']
 number = [0,1,2,3,4,5,6,7,8,9,'skip','reverse','+2', 'wild', 'wild4']
 cencard = []
+
+'''
+Each card is represented by a tuple. Index 0 is colour, index 1 is number: ('red', '5')
+skip, reverse, +2, wild, wild4 are considered as numbers
+cencard contains the card that is currently in the centre.
+'''
+
 def random_card():
         col = choice(colours)
         num = choice(number)
@@ -28,11 +35,10 @@ class Player:
         self.rearrange_cards(self.cards)
         self.turn = True
         num = int()
-        while True:
+        while self.turn:
             lst = []
             card = input('Play a card: ')
             num = card
-            #print(num)
             card = str(card)
             list_card = list(card.split())
             if card == '':
@@ -45,8 +51,6 @@ class Player:
                 lst.append(None)
                 return lst
             elif card.isnumeric():
-                #card = Game(self).check_card(card)
-                #print(card)
                 card = self.num_to_card(card)
                 if card[0] == 'wild':
                     colours = {1:'red', 2:'blue', 3:'green', 4:'yellow'}
@@ -97,7 +101,6 @@ class Player:
                 print('Please input a number')
                 continue
             self.turn = False
-            #self.rearrange_cards(self.cards)
             
 
     def show_cards(self):
@@ -117,6 +120,7 @@ class Player:
             #print(f'draw_card: {card} added')
         return card_list
 
+    # Reorganises the cards in a player's hand so that it is being displayed nicely
     def rearrange_cards(self, cards):
         count = 1
         new_dict = {}
@@ -125,6 +129,7 @@ class Player:
             count+=1
         self.cards = new_dict
 
+    # Convert user input(integer) into the actual card itself(tuple)
     def num_to_card(self, num):
         num = int(num)
         try:
@@ -141,10 +146,6 @@ class Game():
         #self.cards = player_class.cards
     
     def check_card(self, card):
-        #card = str(card)
-        #tuple_card = tuple(card.split())
-        #list_card = list(card.split())
-        
         while True:
             if card[0] == 'wild' or card[0] == 'wild4':
                 output = card

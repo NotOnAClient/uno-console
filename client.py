@@ -1,5 +1,7 @@
 import socket
 import pickle
+import threading
+from _thread import *
 import uno
 
 server_settings = []
@@ -28,41 +30,48 @@ player = uno.Player(username)
 player.draw_cards(7)
 
 def send(msg):
-    #a = client.recv(2048).decode(FORMAT)
-    #client.send('ready'.encode())
-    if type(msg) == str: #string
+    if isinstance(msg, str):  # If message is a string
+        msg_type = 'str'  # Indicate string type
         msg = msg.encode(FORMAT)
-        msg_header = f"{len(msg):<{header}}".encode(FORMAT)
-        #print(f'send: {msg} string')
-        client.send(msg_header + msg)
-    else: #pickle
-        data = pickle.dumps(msg)
-        data_header = f"{len(data):<{header}}".encode(FORMAT)
-        #print('header sent data')
-        client.send(data_header + data)
-        #print(f'{data} data')
+    else:  # Assume message is pickleable
+        msg_type = 'pickle'  # Indicate pickle type
+        msg = pickle.dumps(msg)
 
-def recv_str():
-    while True:
-        msg_header = client.recv(header)
-        msg_len = int(msg_header.decode(FORMAT))
-        msg = client.recv(msg_len).decode(FORMAT)
-        return msg
+    msg_header = f"{len(msg):<{header}}{msg_type:<10}".encode(FORMAT)
 
-def recv_data():
-    while True:
-        data_header = client.recv(header)
-        data_len = int(data_header.decode(FORMAT))
-        data = client.recv(data_len)
-        d = pickle.loads(data)
-        #print(d)
-        return d
+    # Send header followed by the message
+    client.send(msg_header + msg)
+
+def receive(self, client_socket):
+        try:
+            # Read the header. It is header + 10 to account for header size, and 10 is length of data type(str, pickle).
+            msg_header = client_socket.recv(header + 10).decode(FORMAT)
+
+            # Get length and data type of message
+            msg_length = int(msg_header[:header].strip())
+            msg_type = msg_header[header:].strip()
+
+            # Read the actual message
+            msg = client_socket.recv(msg_length)
+
+            if msg_type == 'str':
+                str = msg.decode(FORMAT)
+                print(f"{client_socket}: {str}")
+                return str
+            elif msg_type == 'pickle':
+                pckl = pickle.loads(msg)
+                print(f"{client_socket}: {pckl}")
+                return pckl
+            else:
+                raise ValueError(f"Unknown message type: {msg_type}")
+        except Exception as e:
+            print(f"An error occured: {e}")
+            return None
 
 def send_info():
     cards = []
     for k,v in player.cards.items():
         cards.append(v)
-    #print(cards)
     send(username)
     send(cards)
 
