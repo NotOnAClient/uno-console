@@ -117,8 +117,7 @@ class Server:
     def client_thread(self, client_socket):
         try:
             while True:
-                data = self.receive(client_socket)
-                if data is None:
+                if self.receive(client_socket) is None:
                     break
         except Exception as e:
             print(f"An error occurred in client_thread: {e}")
